@@ -56,7 +56,7 @@ impl Ledger {
         let answer: KeyRequestAnswer = raw_answer.data.as_slice().try_into()?;
 
         let pub_key = btckey::PublicKey {
-            compressed: false,
+            compressed: true,
             key: secp256k1::key::PublicKey::from_slice(answer.pub_key)?
         };
 
