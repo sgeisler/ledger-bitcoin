@@ -101,6 +101,7 @@ impl<'a> TryFrom<&'a [u8]> for KeyRequestAnswer<'a> {
     }
 }
 
+#[derive(Debug)]
 pub enum Error {
     DerivationPathTooLong,
     InvalidLedgerResponse,
