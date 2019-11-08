@@ -10,6 +10,7 @@ use std::convert::{TryFrom, TryInto};
 
 pub use ledger::Error as LedgerError;
 
+/// Ledger device handle
 pub struct Ledger {
     device_handle: ledger::LedgerApp,
     network: Network,
@@ -22,6 +23,7 @@ struct KeyRequestAnswer<'a> {
 }
 
 impl Ledger {
+    /// Get handle for first recognized and connected ledger device
     pub fn new(network: Network) -> Result<Ledger, LedgerError> {
         Ok(Ledger {
             device_handle: ledger::LedgerApp::new()?,
@@ -29,6 +31,7 @@ impl Ledger {
         })
     }
 
+    /// Fetch an extended public key using a derivation path
     pub fn get_key(&self, path: DerivationPath) -> Result<ExtendedPubKey, Error> {
         let path_len = path.as_ref().len();
         if path_len > 10 {
@@ -103,9 +106,13 @@ impl<'a> TryFrom<&'a [u8]> for KeyRequestAnswer<'a> {
 
 #[derive(Debug)]
 pub enum Error {
+    /// Ledger devices only support derivation of depth <=10
     DerivationPathTooLong,
+    /// The ledger sent a response we couldn't parse
     InvalidLedgerResponse,
+    /// Ledger error
     LedgerError(LedgerError),
+    /// Secp256k1 error
     Secp256k1Error(secp256k1::Error),
 }
 
@@ -123,8 +130,4 @@ impl From<secp256k1::Error> for Error {
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
 }
