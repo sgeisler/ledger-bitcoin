@@ -22,6 +22,14 @@ struct KeyRequestAnswer<'a> {
     chain_code: &'a [u8],
 }
 
+#[derive(Debug)]
+pub struct LedgerFirmwareVersion {
+    pub features: u8,
+    pub architecture: u8,
+    pub firmware_version: [u8; 3],
+    pub loader_version: [u8; 2],
+}
+
 impl Ledger {
     /// Get handle for first recognized and connected ledger device
     pub fn new(network: Network) -> Result<Ledger, LedgerError> {
@@ -29,6 +37,18 @@ impl Ledger {
             device_handle: ledger::LedgerApp::new()?,
             network
         })
+    }
+
+    pub fn get_firmware_version(&self) -> Result<LedgerFirmwareVersion, Error> {
+        self.device_handle.exchange(ApduCommand {
+            cla: 0xE0,
+            ins: 0xC4,
+            p1: 0,
+            p2: 0,
+            length: 0,
+            data: vec![]
+        })?.data.as_slice().try_into()
+
     }
 
     /// Fetch an extended public key using a derivation path
@@ -100,6 +120,25 @@ impl<'a> TryFrom<&'a [u8]> for KeyRequestAnswer<'a> {
         Ok(KeyRequestAnswer {
             pub_key,
             chain_code
+        })
+    }
+}
+
+impl TryFrom<&[u8]> for LedgerFirmwareVersion {
+    type Error = Error;
+
+    fn try_from(data: &[u8]) -> Result<Self, Self::Error> {
+        if data.len() < 7 {
+            return Err(Error::InvalidLedgerResponse);
+        }
+
+        let f = data.to_vec();
+
+        Ok(LedgerFirmwareVersion {
+            features: data[0],
+            architecture: data[1],
+            firmware_version: data[2..5].try_into().unwrap(),
+            loader_version: data[5..7].try_into().unwrap()
         })
     }
 }
